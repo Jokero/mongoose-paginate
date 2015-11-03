@@ -64,9 +64,9 @@ function paginate(conditions, params) {
         }
 
         var meta = {
-            limit:      limit,
-            offset:     offset,
-            totalCount: totalCount
+            limit:  limit,
+            offset: offset,
+            total:  totalCount
         };
 
         return {
