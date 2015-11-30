@@ -9,7 +9,7 @@ var Promise = require('bluebird');
  * @param {Object|String}         [options.sort]
  * @param {Array|Object|String}   [options.populate]
  * @param {Boolean}               [options.lean=false]
- * @param {Boolean}               [options.assignId=false]
+ * @param {Boolean}               [options.leanWithId=true]
  * @param {Number}                [options.offset=0] - Use offset or page to set skip position
  * @param {Number}                [options.page=1]
  * @param {Number}                [options.limit=10]
@@ -21,16 +21,23 @@ function paginate(criteria, options, callback) {
     criteria = criteria || {};
     options  = options || {};
 
-    var select   = options.select;
-    var sort     = options.sort;
-    var populate = options.populate;
-    var lean     = options.lean || false;
-    var assignId = options.assignId || false;
+    var select     = options.select;
+    var sort       = options.sort;
+    var populate   = options.populate;
+    var lean       = options.lean || false;
+    var leanWithId = options.hasOwnProperty('leanWithId') ? options.leanWithId : true;
 
     var limit  = options.hasOwnProperty('limit') ? options.limit : 10;
-    var offset = options.offset || 0;
-    var page   = options.page || Math.ceil(offset / limit) || 1;
-    var skip   = offset || (page - 1) * limit;
+    var offset = 0;
+    var page   = 1;
+
+    if (options.hasOwnProperty('offset')) {
+        offset = options.offset;
+        page   = Math.ceil((offset + 1) / limit);
+    } else if (options.hasOwnProperty('page')) {
+        page   = options.page;
+        offset = (page - 1) * limit;
+    }
 
     var promises = {
         docs:  Promise.resolve([]),
@@ -41,7 +48,7 @@ function paginate(criteria, options, callback) {
         var query = this.find(criteria)
                         .select(select)
                         .sort(sort)
-                        .skip(skip)
+                        .skip(offset)
                         .limit(limit)
                         .lean(lean);
 
@@ -51,15 +58,17 @@ function paginate(criteria, options, callback) {
             });
         }
 
-        promises.docs = query.exec().then(function(docs) {
-            if (assignId) {
+        promises.docs = query.exec();
+
+        if (lean && leanWithId) {
+            promises.docs = promises.docs.then(function(docs) {
                 docs.forEach(function(doc) {
                     doc.id = String(doc._id);
                 });
-            }
 
-            return docs;
-        });
+                return docs;
+            });
+        }
     }
 
     return Promise.props(promises)
@@ -69,7 +78,7 @@ function paginate(criteria, options, callback) {
                 offset: offset,
                 page:   page,
                 limit:  limit,
-                pages:  Math.ceil(result.count / limit),
+                pages:  Math.ceil(result.count / limit) || 1,
                 total:  result.count
             };
         })
