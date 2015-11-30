@@ -1,5 +1,9 @@
 {
     "name":    "mongoose-paginate",
     "version": "0.0.1",
-    "private": true
+    "private": true,
+
+    "dependencies": {
+        "bluebird": "3.0.*"
+    }
 }

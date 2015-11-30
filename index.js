@@ -1,77 +1,84 @@
+'use strict';
+
+var Promise = require('bluebird');
+
 /**
- * todo: нужно навести порядок в https://github.com/edwardhotchkiss/mongoose-paginate и использовать его
+ * @param {Object}              [criteria={}]
+ * @param {Object}              [options={}]
+ * @param {Object|String}         [options.select]
+ * @param {Object|String}         [options.sort]
+ * @param {Array|Object|String}   [options.populate]
+ * @param {Boolean}               [options.lean=false]
+ * @param {Boolean}               [options.assignId=false]
+ * @param {Number}                [options.offset=0] - Use offset or page to set skip position
+ * @param {Number}                [options.page=1]
+ * @param {Number}                [options.limit=10]
+ * @param {Function}            [callback]
  *
+ * @returns {Promise}
+ */
+function paginate(criteria, options, callback) {
+    criteria = criteria || {};
+    options  = options || {};
+
+    var select   = options.select;
+    var sort     = options.sort;
+    var populate = options.populate;
+    var lean     = options.lean || false;
+    var assignId = options.assignId || false;
+
+    var limit  = options.hasOwnProperty('limit') ? options.limit : 10;
+    var offset = options.offset || 0;
+    var page   = options.page || Math.ceil(offset / limit) || 1;
+    var skip   = offset || (page - 1) * limit;
+
+    var promises = {
+        docs:  Promise.resolve([]),
+        count: this.count(criteria).exec()
+    };
+
+    if (limit) {
+        var query = this.find(criteria)
+                        .select(select)
+                        .sort(sort)
+                        .skip(skip)
+                        .limit(limit)
+                        .lean(lean);
+
+        if (populate) {
+            [].concat(populate).forEach(function(item) {
+                query.populate(item);
+            });
+        }
+
+        promises.docs = query.exec().then(function(docs) {
+            if (assignId) {
+                docs.forEach(function(doc) {
+                    doc.id = String(doc._id);
+                });
+            }
+
+            return docs;
+        });
+    }
+
+    return Promise.props(promises)
+        .then(function(result) {
+            return {
+                docs:   result.docs,
+                offset: offset,
+                page:   page,
+                limit:  limit,
+                pages:  Math.ceil(result.count / limit),
+                total:  result.count
+            };
+        })
+        .asCallback(callback);
+}
+
+/**
  * @param {Schema} schema
  */
 module.exports = function(schema) {
     schema.statics.paginate = paginate;
 };
-
-/**
- * @param {Object}        [conditions={}]
- * @param {Object}        [params]
- * @param {Object|String}   [params.select]
- * @param {Object|String}   [params.populate]
- * @param {Object|String}   [params.sort={}]
- * @param {Number}          [params.limit=20]
- * @param {Number}          [params.offset=0]
- * @param {Boolean}         [params.lean=true]
- * @param {Boolean}         [params.assignId=true]
- *
- * @returns {Promise}
- */
-function paginate(conditions, params) {
-    conditions = conditions || {};
-    params     = params || {};
-
-    var select   = params.select;
-    var populate = params.populate;
-    var sort     = params.sort || {};
-    var limit    = params.hasOwnProperty('limit') ? params.limit : 20;
-    var offset   = params.hasOwnProperty('offset') ? params.offset : 0;
-    var lean     = params.hasOwnProperty('lean') ? params.lean : true;
-    var assignId = params.hasOwnProperty('assignId') ? params.assignId : true;
-
-    var collectionPromise = Promise.resolve([]);
-    if (limit) {
-        var query = this.find(conditions)
-                        .sort(sort)
-                        .limit(limit)
-                        .skip(offset)
-                        .lean(lean);
-
-        if (select) {
-            query.select(select);
-        }
-
-        if (populate) {
-            query.populate(populate);
-        }
-
-        collectionPromise = query.exec();
-    }
-
-    var totalCountPromise = this.count(conditions).exec();
-
-    return Promise.all([collectionPromise, totalCountPromise]).then(function(result) {
-        var data       = result[0];
-        var totalCount = result[1];
-
-        if (assignId) {
-            data.forEach(function(item) {
-                item.id = item._id.toString();
-            });
-        }
-
-        var meta = {
-            limit:  limit,
-            offset: offset,
-            total:  totalCount
-        };
-
-        return {
-            data: data,
-            meta: meta
-        };
-    });
-}
