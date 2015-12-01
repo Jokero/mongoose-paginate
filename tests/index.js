@@ -60,7 +60,7 @@ describe('mongoose-paginate', function() {
     });
 
     it('calls callback', function(done) {
-        Book.paginate({}, { page: 1, limit: 20 }, function(err, result) {
+        Book.paginate({}, {}, function(err, result) {
             expect(err).to.equal(null);
             expect(result instanceof Object).to.be.true;
 
@@ -141,14 +141,14 @@ describe('mongoose-paginate', function() {
             describe('lean', function() {
                 it('with default leanWithId=true', function() {
                     return Book.paginate({}, { lean: true }).then(function(result) {
-                        expect(result.docs[0].constructor.name).to.not.equal('model');
+                        expect(result.docs[0] instanceof mongoose.Document).to.be.false;
                         expect(result.docs[0].id).to.equal(String(result.docs[0]._id));
                     });
                 });
 
                 it('with leanWithId=false', function() {
                     return Book.paginate({}, { lean: true, leanWithId: false }).then(function(result) {
-                        expect(result.docs[0].constructor.name).to.not.equal('model');
+                        expect(result.docs[0] instanceof mongoose.Document).to.be.false;
                         expect(result.docs[0].id).to.equal(undefined);
                     });
                 });
