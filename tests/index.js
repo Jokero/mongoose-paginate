@@ -7,7 +7,7 @@ var expect         = require('chai').expect;
 
 chai.use(chaiAsPromised);
 
-const MONGO_URI = 'mongodb://localhost/mongoose_paginate_test';
+const MONGO_URI = 'mongodb://127.0.0.1/mongoose_paginate_test';
 
 
 var AuthorSchema = new mongoose.Schema({ name: String });
