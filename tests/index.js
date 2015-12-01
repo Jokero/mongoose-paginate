@@ -68,14 +68,14 @@ describe('mongoose-paginate', function() {
         });
     });
 
-    it('uses criteria to search', function() {
-        return Book.paginate({ title: 'Book #10' }).then(function(result) {
-            expect(result.docs.length).to.equal(1);
-            expect(result.docs[0].title).to.equal('Book #10');
-        });
-    });
-
     describe('paginates', function() {
+        it('with criteria', function() {
+            return Book.paginate({ title: 'Book #10' }).then(function(result) {
+                expect(result.docs.length).to.equal(1);
+                expect(result.docs[0].title).to.equal('Book #10');
+            });
+        });
+
         describe('with pagination options', function() {
             it('offset and limit', function() {
                 return Book.paginate({}, { offset: 30, limit: 20 }).then(function(result) {
@@ -118,7 +118,7 @@ describe('mongoose-paginate', function() {
             });
         });
 
-        describe('with not-pagination options', function() {
+        describe('with non-pagination options', function() {
             it('select', function() {
                 return Book.paginate({}, { select: 'title' }).then(function(result) {
                     expect(result.docs[0].title).to.not.equal(undefined);
