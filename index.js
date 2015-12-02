@@ -25,16 +25,19 @@ function paginate(criteria, options, callback) {
     var lean       = options.lean || false;
     var leanWithId = options.hasOwnProperty('leanWithId') ? options.leanWithId : true;
 
-    var limit  = options.hasOwnProperty('limit') ? options.limit : 10;
-    var offset = 0;
-    var page   = 1;
+    var limit = options.hasOwnProperty('limit') ? options.limit : 10;
+    var skip, offset, page;
 
     if (options.hasOwnProperty('offset')) {
         offset = options.offset;
-        page   = Math.ceil((offset + 1) / limit);
+        skip   = offset;
     } else if (options.hasOwnProperty('page')) {
-        page   = options.page;
-        offset = (page - 1) * limit;
+        page = options.page;
+        skip = (page - 1) * limit;
+    } else {
+        offset = 0;
+        page   = 1;
+        skip   = offset;
     }
 
     var promises = {
@@ -46,7 +49,7 @@ function paginate(criteria, options, callback) {
         var query = this.find(criteria)
                         .select(select)
                         .sort(sort)
-                        .skip(offset)
+                        .skip(skip)
                         .limit(limit)
                         .lean(lean);
 
@@ -70,15 +73,23 @@ function paginate(criteria, options, callback) {
     }
 
     return Promise.props(promises)
-        .then(function(result) {
-            return {
-                docs:   result.docs,
-                offset: offset,
-                page:   page,
-                limit:  limit,
-                pages:  Math.ceil(result.count / limit) || 1,
-                total:  result.count
+        .then(function(data) {
+            var result = {
+                docs:  data.docs,
+                total: data.count,
+                limit: limit
             };
+
+            if (offset !== undefined) {
+                result.offset = offset;
+            }
+
+            if (page !== undefined) {
+                result.page  = page;
+                result.pages = Math.ceil(data.count / limit) || 1;
+            }
+
+            return result;
         })
         .asCallback(callback);
 }

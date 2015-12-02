@@ -80,40 +80,43 @@ describe('mongoose-paginate', function() {
             it('offset and limit', function() {
                 return Book.paginate({}, { offset: 30, limit: 20 }).then(function(result) {
                     expect(result.docs.length).to.equal(20);
-                    expect(result.offset).to.equal(30);
-                    expect(result.page).to.equal(2);
-                    expect(result.limit).to.equal(20);
-                    expect(result.pages).to.equal(5);
                     expect(result.total).to.equal(100);
+                    expect(result.limit).to.equal(20);
+                    expect(result.offset).to.equal(30);
+                    expect(result.page).to.equal(undefined);
+                    expect(result.pages).to.equal(undefined);
                 });
             });
 
             it('page and limit', function() {
                 return Book.paginate({}, { page: 1, limit: 20 }).then(function(result) {
                     expect(result.docs.length).to.equal(20);
-                    expect(result.offset).to.equal(0);
-                    expect(result.page).to.equal(1);
-                    expect(result.limit).to.equal(20);
-                    expect(result.pages).to.equal(5);
                     expect(result.total).to.equal(100);
+                    expect(result.limit).to.equal(20);
+                    expect(result.page).to.equal(1);
+                    expect(result.pages).to.equal(5);
+                    expect(result.offset).to.equal(undefined);
                 });
             });
 
             it('default page=1 and limit=10', function() {
                 return Book.paginate().then(function(result) {
                     expect(result.docs.length).to.equal(10);
+                    expect(result.total).to.equal(100);
+                    expect(result.limit).to.equal(10);
                     expect(result.page).to.equal(1);
+                    expect(result.pages).to.equal(10);
+                    expect(result.offset).to.equal(0);
                 });
             });
 
             it('zero limit', function() {
                 return Book.paginate({}, { page: 1, limit: 0 }).then(function(result) {
                     expect(result.docs.length).to.equal(0);
-                    expect(result.offset).to.equal(0);
-                    expect(result.page).to.equal(1);
-                    expect(result.limit).to.equal(0);
-                    expect(result.pages).to.equal(Infinity);
                     expect(result.total).to.equal(100);
+                    expect(result.limit).to.equal(0);
+                    expect(result.page).to.equal(1);
+                    expect(result.pages).to.equal(Infinity);
                 });
             });
         });
