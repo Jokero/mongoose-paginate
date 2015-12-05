@@ -89,7 +89,7 @@ Model.paginate({}, { offset: 20, limit: 10 }).then(function(result) {
 ```js
 var query   = {};
 var options = {
-    select:   'title date',
+    select:   'title date author',
     sort:     { date: -1 },
     populate: 'author',
     lean:     true,
