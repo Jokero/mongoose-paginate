@@ -9,7 +9,7 @@ Pagination plugin for [Mongoose](http://mongoosejs.com)
 
 ## Installation
 
-```bash
+```sh
 npm install mongoose-paginate
 ```
 
@@ -137,7 +137,7 @@ Model.paginate().then(function(result) {
 
 ## Tests
 
-```bash
+```sh
 npm install
 npm test
 ```
