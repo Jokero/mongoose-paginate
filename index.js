@@ -1,7 +1,7 @@
 var Promise = require('bluebird');
 
 /**
- * @param {Object}              [criteria={}]
+ * @param {Object}              [query={}]
  * @param {Object}              [options={}]
  * @param {Object|String}         [options.select]
  * @param {Object|String}         [options.sort]
@@ -15,9 +15,9 @@ var Promise = require('bluebird');
  *
  * @returns {Promise}
  */
-function paginate(criteria, options, callback) {
-    criteria = criteria || {};
-    options  = Object.assign({}, paginate.options, options);
+function paginate(query, options, callback) {
+    query   = query || {};
+    options = Object.assign({}, paginate.options, options);
 
     var select     = options.select;
     var sort       = options.sort;
@@ -42,11 +42,11 @@ function paginate(criteria, options, callback) {
 
     var promises = {
         docs:  Promise.resolve([]),
-        count: this.count(criteria).exec()
+        count: this.count(query).exec()
     };
 
     if (limit) {
-        var query = this.find(criteria)
+        var query = this.find(query)
                         .select(select)
                         .sort(sort)
                         .skip(skip)
