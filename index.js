@@ -17,7 +17,7 @@ var Promise = require('bluebird');
  */
 function paginate(criteria, options, callback) {
     criteria = criteria || {};
-    options  = options || {};
+    options  = Object.assign({}, paginate.options, options);
 
     var select     = options.select;
     var sort       = options.sort;
@@ -100,3 +100,5 @@ function paginate(criteria, options, callback) {
 module.exports = function(schema) {
     schema.statics.paginate = paginate;
 };
+
+module.exports.paginate = paginate;

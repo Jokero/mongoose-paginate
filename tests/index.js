@@ -76,84 +76,96 @@ describe('mongoose-paginate', function() {
             });
         });
 
-        describe('with pagination options', function() {
-            it('offset and limit', function() {
-                return Book.paginate({}, { offset: 30, limit: 20 }).then(function(result) {
-                    expect(result.docs).to.have.length(20);
-                    expect(result.total).to.equal(100);
-                    expect(result.limit).to.equal(20);
-                    expect(result.offset).to.equal(30);
-                    expect(result).to.not.have.property('page');
-                    expect(result).to.not.have.property('pages');
-                });
-            });
-
-            it('page and limit', function() {
-                return Book.paginate({}, { page: 1, limit: 20 }).then(function(result) {
-                    expect(result.docs).to.have.length(20);
-                    expect(result.total).to.equal(100);
-                    expect(result.limit).to.equal(20);
-                    expect(result.page).to.equal(1);
-                    expect(result.pages).to.equal(5);
-                    expect(result).to.not.have.property('offset');
-                });
-            });
-
-            it('default page=1 and limit=10', function() {
-                return Book.paginate().then(function(result) {
-                    expect(result.docs).to.have.length(10);
-                    expect(result.total).to.equal(100);
-                    expect(result.limit).to.equal(10);
-                    expect(result.page).to.equal(1);
-                    expect(result.pages).to.equal(10);
-                    expect(result.offset).to.equal(0);
-                });
-            });
-
-            it('zero limit', function() {
-                return Book.paginate({}, { page: 1, limit: 0 }).then(function(result) {
-                    expect(result.docs).to.have.length(0);
-                    expect(result.total).to.equal(100);
-                    expect(result.limit).to.equal(0);
-                    expect(result.page).to.equal(1);
-                    expect(result.pages).to.equal(Infinity);
-                });
+        it('with default options (page=1, limit=10, lean=false)', function() {
+            return Book.paginate().then(function(result) {
+                expect(result.docs).to.have.length(10);
+                expect(result.docs[0]).to.be.an.instanceof(mongoose.Document);
+                expect(result.total).to.equal(100);
+                expect(result.limit).to.equal(10);
+                expect(result.page).to.equal(1);
+                expect(result.pages).to.equal(10);
+                expect(result.offset).to.equal(0);
             });
         });
 
-        describe('with non-pagination options', function() {
-            it('select', function() {
-                return Book.paginate({}, { select: 'title' }).then(function(result) {
-                    expect(result.docs[0].title).to.exist;
-                    expect(result.docs[0].date).to.not.exist;
+        it('with custom default options', function() {
+            mongoosePaginate.paginate.options = {
+                limit: 20,
+                lean:  true
+            };
+
+            return Book.paginate().then(function(result) {
+                expect(result.docs).to.have.length(20);
+                expect(result.limit).to.equal(20);
+                expect(result.docs[0]).to.not.be.an.instanceof(mongoose.Document);
+
+                delete mongoosePaginate.paginate.options;
+            })
+        });
+
+        it('with offset and limit', function() {
+            return Book.paginate({}, { offset: 30, limit: 20 }).then(function(result) {
+                expect(result.docs).to.have.length(20);
+                expect(result.total).to.equal(100);
+                expect(result.limit).to.equal(20);
+                expect(result.offset).to.equal(30);
+                expect(result).to.not.have.property('page');
+                expect(result).to.not.have.property('pages');
+            });
+        });
+
+        it('with page and limit', function() {
+            return Book.paginate({}, { page: 1, limit: 20 }).then(function(result) {
+                expect(result.docs).to.have.length(20);
+                expect(result.total).to.equal(100);
+                expect(result.limit).to.equal(20);
+                expect(result.page).to.equal(1);
+                expect(result.pages).to.equal(5);
+                expect(result).to.not.have.property('offset');
+            });
+        });
+
+        it('with zero limit', function() {
+            return Book.paginate({}, { page: 1, limit: 0 }).then(function(result) {
+                expect(result.docs).to.have.length(0);
+                expect(result.total).to.equal(100);
+                expect(result.limit).to.equal(0);
+                expect(result.page).to.equal(1);
+                expect(result.pages).to.equal(Infinity);
+            });
+        });
+
+        it('with select', function() {
+            return Book.paginate({}, { select: 'title' }).then(function(result) {
+                expect(result.docs[0].title).to.exist;
+                expect(result.docs[0].date).to.not.exist;
+            });
+        });
+
+        it('with sort', function() {
+            return Book.paginate({}, { sort: { date: -1 } }).then(function(result) {
+                expect(result.docs[0].title).to.equal('Book #100');
+            });
+        });
+
+        it('with populate', function() {
+            return Book.paginate({}, { populate: 'author' }).then(function(result) {
+                expect(result.docs[0].author.name).to.equal('Arthur Conan Doyle');
+            });
+        });
+
+        describe('with lean', function() {
+            it('with default leanWithId=true', function() {
+                return Book.paginate({}, { lean: true }).then(function(result) {
+                    expect(result.docs[0]).to.not.be.an.instanceof(mongoose.Document);
+                    expect(result.docs[0].id).to.equal(String(result.docs[0]._id));
                 });
             });
 
-            it('sort', function() {
-                return Book.paginate({}, { sort: { date: -1 } }).then(function(result) {
-                    expect(result.docs[0].title).to.equal('Book #100');
-                });
-            });
-
-            it('populate', function() {
-                return Book.paginate({}, { populate: 'author' }).then(function(result) {
-                    expect(result.docs[0].author.name).to.equal('Arthur Conan Doyle');
-                });
-            });
-
-            describe('lean', function() {
-                it('with default leanWithId=true', function() {
-                    return Book.paginate({}, { lean: true }).then(function(result) {
-                        expect(result.docs[0]).to.not.be.an.instanceof(mongoose.Document);
-                        expect(result.docs[0].id).to.equal(String(result.docs[0]._id));
-                    });
-                });
-
-                it('with leanWithId=false', function() {
-                    return Book.paginate({}, { lean: true, leanWithId: false }).then(function(result) {
-                        expect(result.docs[0]).to.not.be.an.instanceof(mongoose.Document);
-                        expect(result.docs[0]).to.not.have.property('id');
-                    });
+            it('with leanWithId=false', function() {
+                return Book.paginate({}, { lean: true, leanWithId: false }).then(function(result) {
+                    expect(result.docs[0]).to.not.be.an.instanceof(mongoose.Document);
+                    expect(result.docs[0]).to.not.have.property('id');
                 });
             });
         });
