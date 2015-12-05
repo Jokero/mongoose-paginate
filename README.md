@@ -45,7 +45,7 @@ Returns promise
   - `[limit=10]` (Number)
 * `[callback(err, result)]` - If specified the callback is called once pagination results are retrieved or when an error has occurred
 
-**Result**
+**Resulting object**
 * `docs` - Array of documents
 * `total` - Total number of documents in collection that match a query
 * `[page]` - Only if specified or default `page`/`offset` values were used 
