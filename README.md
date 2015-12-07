@@ -33,7 +33,7 @@ Returns promise
 
 **Parameters**
 
-* `[query]` {Object} - Query criteria
+* `[query]` {Object} - Query criteria. [Documentation](https://docs.mongodb.org/manual/tutorial/query-documents)
 * `[options]` {Object}
   - `[select]` {Object | String} - Fields to return (by default returns all fields). [Documentation](http://mongoosejs.com/docs/api.html#query_Query-select) 
   - `[sort]` {Object | String} - Sort order. [Documentation](http://mongoosejs.com/docs/api.html#query_Query-sort) 
@@ -45,13 +45,15 @@ Returns promise
   - `[limit=10]` {Number}
 * `[callback(err, result)]` - If specified the callback is called once pagination results are retrieved or when an error has occurred
 
-**Resulting object**
+**Return value**
+
+Promise fulfilled with object having properties:
 * `docs` {Array} - Array of documents
 * `total` {Number} - Total number of documents in collection that match a query
+* `limit` {Number} - Limit that was used
 * `[page]` {Number} - Only if specified or default `page`/`offset` values were used 
 * `[pages]` {Number} - Only if `page` specified or default `page`/`offset` values were used 
 * `[offset]` {Number} - Only if specified or default `page`/`offset` values were used
-* `limit` {Number} - Limit that was used
 
 ### Examples
 
